@@ -23,14 +23,39 @@ use Illuminate\View\Factory as Blade;
 
 class ViewRenderer extends BaseViewRenderer
 {
+    /**
+     * instance of Blade
+     *
+     * @var Illuminate\View\Factory
+     */
     protected $blade;
 
+    /**
+     * extended extension of templete
+     *
+     * @var array
+     */
     protected $extensions = ['bl' => 'blade'];
 
+    /**
+     * blade complied cache path
+     *
+     * @var string
+     */
     protected $cachePath = '@runtime/Blade/cache';
 
+    /**
+     *  view file path, support yii aliases
+     *
+     * @var array
+     */
     protected $viewPath = ['@app/views', '@yii/views', '@vendor/yiisoft/yii2-debug/views'];
 
+    /**
+     * init function, called by yii2
+     *
+     * @return null
+     */
     public function init()
     {
         $container = $this->getContainer();
@@ -46,6 +71,14 @@ class ViewRenderer extends BaseViewRenderer
         }
     }
 
+    /**
+     * override function render of yii\base\ViewRenderer
+     *
+     * @param  yii\web\View $view
+     * @param  string $file  absolute file path of view
+     * @param  array $params params to view file
+     * @return string        complied templete
+     */
     public function render($view, $file, $params)
     {
         foreach ($this->viewPath as $path) {
@@ -64,6 +97,38 @@ class ViewRenderer extends BaseViewRenderer
         return $this->blade->make($file, $params)->render();
     }
 
+    /**
+     *  trim file extension of view
+     *
+     * @param  string $file relative file path of view
+     *
+     * @return string relative file path of view without extension
+     */
+    protected function trimFileExt($file)
+    {
+        $extensions = array_keys($this->blade->getExtensions());
+        usort($extensions, function ($a, $b) {
+            $diff = strlen($a) - strlen($b);
+            if ($diff == 0) {
+                return 0;
+            }
+            return $diff > 0 ? -1 : 1;
+        });
+        foreach ($extensions as $ext) {
+            $ext = '.' . $ext;
+            $length = strlen($ext);
+            if (substr($file, -$length) === $ext) {
+                return substr_replace($file, '', -$length);
+            }
+        }
+        return $file;
+    }
+
+    /**
+     * get instance of Illuminate\Container\Container
+     *
+     * @return Illuminate\Container\Container
+     */
     private function getContainer()
     {
         $cache = Yii::getAlias($this->cachePath);
@@ -97,25 +162,5 @@ class ViewRenderer extends BaseViewRenderer
         });
 
         return $container;
-    }
-
-    private function trimFileExt($file)
-    {
-        $extensions = array_keys($this->blade->getExtensions());
-        usort($extensions, function ($a, $b) {
-            $diff = strlen($a) - strlen($b);
-            if ($diff == 0) {
-                return 0;
-            }
-            return $diff > 0 ? -1 : 1;
-        });
-        foreach ($extensions as $ext) {
-            $ext = '.' . $ext;
-            $length = strlen($ext);
-            if (substr($file, -$length) === $ext) {
-                return substr_replace($file, '', -$length);
-            }
-        }
-        return $file;
     }
 }
