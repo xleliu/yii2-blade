@@ -1,0 +1,23 @@
+{
+    "name": "xiaoler/yii2-blade",
+    "description": "Laravel view blade for yii2",
+    "license": "MIT",
+    "homepage": "http://0x1.im",
+    "support": {
+        "issues": "https://github.com/xiaoler/yii2-blade/issues",
+        "source": "https://github.com/xiaoler/yii2-blade"
+    },
+    "authors": [
+        {
+            "name": "Scholer Liu",
+            "email": "scholer_l@live.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*",
+        "illuminate/view": "5.1.*"
+    },
+    "autoload": {
+        "psr-4": { "xiaoler\\blade\\": "" }
+    }
+}
