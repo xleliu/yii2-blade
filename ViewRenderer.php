@@ -101,8 +101,7 @@ class ViewRenderer extends BaseViewRenderer
      *  trim file extension of view
      *
      * @param  string $file relative file path of view
-     *
-     * @return string relative file path of view without extension
+     * @return string       relative file path of view without extension
      */
     protected function trimFileExt($file)
     {
@@ -126,6 +125,7 @@ class ViewRenderer extends BaseViewRenderer
 
     /**
      * get instance of Illuminate\Container\Container
+     * see [https://github.com/illuminate/view/blob/master/ViewServiceProvider.php]
      *
      * @return Illuminate\Container\Container
      */
