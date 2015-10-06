@@ -52,7 +52,7 @@ class ViewRenderer extends BaseViewRenderer
     protected $viewPath = ['@app/views', '@yii/views', '@vendor/yiisoft/yii2-debug/views'];
 
     /**
-     * init function, called by yii2
+     * initialize function, called by yii2
      *
      * @return null
      */
@@ -90,7 +90,7 @@ class ViewRenderer extends BaseViewRenderer
                 break;
             }
         }
-        $file = $this->trimFileExt($file);
+        $file = $this->trimExtension($file);
 
         $params['app'] = \Yii::$app;
         $params['view'] = $view;
@@ -103,7 +103,7 @@ class ViewRenderer extends BaseViewRenderer
      * @param  string $file relative file path of view
      * @return string       relative file path of view without extension
      */
-    protected function trimFileExt($file)
+    protected function trimExtension($file)
     {
         $extensions = array_keys($this->blade->getExtensions());
         usort($extensions, function ($a, $b) {
