@@ -4,8 +4,8 @@
     "license": "MIT",
     "homepage": "http://0x1.im",
     "support": {
-        "issues": "https://github.com/xiaoler/yii2-blade/issues",
-        "source": "https://github.com/xiaoler/yii2-blade"
+        "issues": "https://github.com/XiaoLer/yii2-blade/issues",
+        "source": "https://github.com/XiaoLer/yii2-blade"
     },
     "authors": [
         {
@@ -15,9 +15,9 @@
     ],
     "require": {
         "yiisoft/yii2": "*",
-        "illuminate/view": "5.1.*"
+        "xiaoLer/blade": "*"
     },
     "autoload": {
-        "psr-4": { "xiaoler\\blade\\": "" }
+        "psr-4": { "Xiaoler\\Blade\\Yii\\": "" }
     }
 }

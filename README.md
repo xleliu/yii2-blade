@@ -2,8 +2,6 @@
 
 将 Laravel 的 PHP 模板引擎 Blade 移植到 yii2。
 
-Blade 模板总本身使用 blade.php 作为模板的后缀，但由于 yii2 中使用 `pathinfo($viewFile, PATHINFO_EXTENSION);` 解析文件后缀，所以无法识别，所以移植中使用 `bl` 作为模板文件的后缀。
-
 ## 使用方式：
 
 ``` php
@@ -12,8 +10,8 @@ Blade 模板总本身使用 blade.php 作为模板的后缀，但由于 yii2 中
     'class' => 'yii\web\View',
     'defaultExtension' => 'php',
     'renderers' => [
-        'bl' => [
-            'class' => 'xiaoler\blade\ViewRenderer',
+        'tpl' => [
+            'class' => 'Xiaoler\Blade\Yii\ViewRenderer',
         ],
     ],
 ],

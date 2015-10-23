@@ -4,36 +4,47 @@
  * Author : Scholer <scholer_l@live.com>
  * date   : 2015-10-04.
  */
-namespace xiaoler\blade;
+namespace Xiaoler\Blade\Yii;
 
 use Yii;
 use yii\web\View;
 use yii\base\ViewRenderer as BaseViewRenderer;
-use Illuminate\Container\Container;
-use Illuminate\Events\Dispatcher;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\View\Engines\PhpEngine;
-use Illuminate\View\Engines\CompilerEngine;
-use Illuminate\View\Engines\EngineResolver;
-use Illuminate\View\Compilers\BladeCompiler;
-use Illuminate\View\FileViewFinder;
-use Illuminate\View\Factory as Blade;
+
+use Xiaoler\Blade\Factory;
+use Xiaoler\Blade\FileViewFinder;
+use Xiaoler\Blade\Engines\CompilerEngine;
+use Xiaoler\Blade\Compilers\BladeCompiler;
 
 class ViewRenderer extends BaseViewRenderer
 {
-    /**
-     * instance of Blade.
-     *
-     * @var Illuminate\View\Factory
-     */
-    protected $blade;
 
     /**
-     * extended extension of templete.
+     * The view finder implementation.
      *
-     * @var array
+     * @var \Xiaoler\Blade\ViewFinderInterface
      */
-    protected $extensions = ['bl' => 'blade'];
+    protected $finder;
+
+    /**
+     * The engine implementation.
+     *
+     * @var \Xiaoler\Blade\Engines\EngineInterface
+     */
+    protected $engine;
+
+    /**
+     * The Blade compiler instance.
+     *
+     * @var \Xiaoler\Blade\Compilers\CompilerInterface
+     */
+    protected $compiler;
+
+    /**
+     * the view factory implementation.
+     *
+     * @var \Xiaoler\Blade\Factory
+     */
+    protected $blade;
 
     /**
      * blade complied cache path.
@@ -54,21 +65,28 @@ class ViewRenderer extends BaseViewRenderer
     ];
 
     /**
+     * optional configuration injected by yii2
+     *
+     * @var array
+     */
+    public $options = [];
+
+    /**
      * initialize function, called by yii2.
      */
     public function init()
     {
-        $container = $this->getContainer();
-        $resolver = $container['view.engine.resolver'];
-        $finder = $container['view.finder'];
-        $events = $container['events'];
+        $cachePath = Yii::getAlias($this->cachePath);
+        $viewPath = array_map(function ($alias) {
+            return Yii::getAlias($alias);
+        }, $this->viewPath);
 
-        $this->blade = new Blade($resolver, $finder, $events);
-        $this->blade->setContainer($container);
+        $this->finder = new FileViewFinder($viewPath);
 
-        foreach ($this->extensions as $ext => $engine) {
-            $this->blade->addExtension($ext, $engine);
-        }
+        $this->compiler = new BladeCompiler($cachePath);
+        $this->engine = new CompilerEngine($this->compiler);
+
+        $this->blade = new Factory($this->engine, $this->finder);
     }
 
     /**
@@ -87,86 +105,20 @@ class ViewRenderer extends BaseViewRenderer
                 $path = Yii::getAlias($path);
             }
             if (strpos($file, $path) === 0) {
-                $file = str_replace($path, '', $file);
+                $file = ltrim(substr($file, strlen($path)), '/');
                 break;
             }
         }
-        $file = $this->trimExtension($file);
-
-        $params['app'] = \Yii::$app;
-        $params['view'] = $view;
-
-        return $this->blade->make($file, $params)->render();
-    }
-
-    /**
-     *  trim file extension of view.
-     *
-     * @param string $file relative file path of view
-     *
-     * @return string relative file path of view without extension
-     */
-    protected function trimExtension($file)
-    {
-        $extensions = array_keys($this->blade->getExtensions());
-        usort($extensions, function ($a, $b) {
-            $diff = strlen($a) - strlen($b);
-            if ($diff == 0) {
-                return 0;
-            }
-
-            return $diff > 0 ? -1 : 1;
-        });
-        foreach ($extensions as $ext) {
-            $ext = '.'.$ext;
-            $length = strlen($ext);
-            if (substr($file, -$length) === $ext) {
-                return substr_replace($file, '', -$length);
-            }
+        $path = pathinfo($file);
+        if (!in_array($path['extension'], $this->finder->getExtensions())) {
+            $this->finder->addExtension($path['extension']);
         }
 
-        return $file;
-    }
+        $file = $path['dirname'] . '/' . $path['filename'];
 
-    /**
-     * get instance of Illuminate\Container\Container
-     * see [https://github.com/illuminate/view/blob/master/ViewServiceProvider.php].
-     *
-     * @return Illuminate\Container\Container
-     */
-    private function getContainer()
-    {
-        $cache = Yii::getAlias($this->cachePath);
-        $views = array_map(function ($alias) {
-            return Yii::getAlias($alias);
-        }, $this->viewPath);
+        $this->blade->share('app', \Yii::$app);
+        $this->blade->share('view', $view);
 
-        $container = new Container();
-
-        $container->bindShared('files', function () {
-            return new Filesystem();
-        });
-        $container->bindShared('events', function () {
-            return new Dispatcher();
-        });
-        $container->bindShared('view.finder', function ($app) use ($views) {
-            return new FileViewFinder($app['files'], $views);
-        });
-        $container->bindShared('blade.compiler', function ($app) use ($cache) {
-            return new BladeCompiler($app['files'], $cache);
-        });
-        $container->bindShared('view.engine.resolver', function () use ($cache, $container) {
-            $resolver = new EngineResolver();
-            $resolver->register('php', function () {
-                return new PhpEngine();
-            });
-            $resolver->register('blade', function () use ($container) {
-                return new CompilerEngine($container['blade.compiler'], $container['files']);
-            });
-
-            return $resolver;
-        });
-
-        return $container;
+        return $this->blade->make($file, $params)->render();
     }
 }
