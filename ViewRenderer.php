@@ -103,9 +103,12 @@ class ViewRenderer extends BaseViewRenderer
         foreach ($this->viewPath as $path) {
             if (strncmp($path, '@', 1) === 0) {
                 $path = Yii::getAlias($path);
+                if (DIRECTORY_SEPARATOR === '\\') {
+                    $path = str_replace('/', DIRECTORY_SEPARATOR, $path);
+                }
             }
             if (strpos($file, $path) === 0) {
-                $file = ltrim(substr($file, strlen($path)), '/');
+                $file = ltrim(substr($file, strlen($path)), DIRECTORY_SEPARATOR);
                 break;
             }
         }
@@ -114,7 +117,7 @@ class ViewRenderer extends BaseViewRenderer
             $this->finder->addExtension($path['extension']);
         }
 
-        $file = $path['dirname'] . '/' . $path['filename'];
+        $file = $path['dirname'] . DIRECTORY_SEPARATOR . $path['filename'];
 
         $this->blade->share('app', \Yii::$app);
         $this->blade->share('view', $view);
