@@ -84,6 +84,15 @@ class ViewRenderer extends BaseViewRenderer
         $this->finder = new FileViewFinder($viewPath);
 
         $this->compiler = new BladeCompiler($cachePath);
+        // allow user to define content tags self.
+        foreach (['rawTags', 'contentTags', 'EscapedContentTags'] as $tagName) {
+            if (array_key_exists($tagName, $this->options)) {
+                $method = 'set' . ucfirst($tagName);
+                $tag = $this->options[$tagName];
+                $this->compiler->{$method}($tag[0], $tag[1]);
+            }
+        }
+
         $this->engine = new CompilerEngine($this->compiler);
 
         $this->blade = new Factory($this->engine, $this->finder);
